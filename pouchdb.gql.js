@@ -1,8 +1,12 @@
 "use strict";
 var pouchCollate = require('pouchdb-collate');
-var GQL = {
-  Errors: require('./lib/errors')
-};
+var errors = require('./lib/errors');
+
+var UNRECOGNIZED_QUERY = errors.UNRECOGNIZED_QUERY;
+var LEXER_ERROR = errors.LEXER_ERROR;
+var PARSING_ERROR = errors.PARSING_ERROR;
+var SELECT_ERROR = errors.SELECT_ERROR;
+var PIVOT_ERROR = errors.PIVOT_ERROR;
 
 exports.gql = function (fun, opts, callback) {
   if (typeof opts === 'function') {
@@ -18,7 +22,7 @@ exports.gql = function (fun, opts, callback) {
     return viewQuery(this, fun, opts);
   }
 
-  return opts.complete(GQL.Errors.UNRECOGNIZED_QUERY);
+  return opts.complete(UNRECOGNIZED_QUERY);
 };
 function viewQuery(db, query, options) {
   if (!options.complete) {
@@ -132,7 +136,7 @@ function viewQuery(db, query, options) {
             return;
           }
         }
-        throw GQL.Errors.LEXER_ERROR(label + " needs a closing " + delimiter, index);
+        throw LEXER_ERROR(label + " needs a closing " + delimiter, index);
       }
 
       while (advance()) {
@@ -169,7 +173,7 @@ function viewQuery(db, query, options) {
               if (queryString[index] === "=") {
                 pairedOperator();
               } else {
-                throw GQL.Errors.LEXER_ERROR("'!' not followed by '='", index);
+                throw LEXER_ERROR("'!' not followed by '='", index);
               }
               break;
 
@@ -225,13 +229,13 @@ function viewQuery(db, query, options) {
       var left;
       advance();
       if (!token.nud) {
-        throw GQL.Errors.PARSING_ERROR("Unexpected token: " + token.type);
+        throw PARSING_ERROR("Unexpected token: " + token.type);
       }
       left = token.nud(token);
       while (rbp < peekToken().lbp) {
         advance();
         if (!token.led) {
-          throw GQL.Errors.PARSING_ERROR("Unexpected token: " + token.type);
+          throw PARSING_ERROR("Unexpected token: " + token.type);
         }
         left = token.led(left);
       }
@@ -292,7 +296,7 @@ function viewQuery(db, query, options) {
     symbol("(", function () {
       var value = expression(20);
       if (peekToken().type !== ")") {
-        throw GQL.Errors.PARSING_ERROR("Expected closing parenthesis ')'");
+        throw PARSING_ERROR("Expected closing parenthesis ')'");
       }
       advance();
       return value;
@@ -344,7 +348,7 @@ function viewQuery(db, query, options) {
           }
           args.push(expression(20));
         }
-        throw GQL.Errors.PARSING_ERROR("Expected closing parenthesis for function " + tok.value);
+        throw PARSING_ERROR("Expected closing parenthesis for function " + tok.value);
       }
       return tok;
     });
@@ -363,7 +367,7 @@ function viewQuery(db, query, options) {
     //handle special "select all" case
     if (!query.select || query.select.trim() === "*") {
       if (query.pivot || query.groupBy) {
-        throw GQL.Errors.SELECT_ERROR(
+        throw SELECT_ERROR(
           "If a pivot or group by is present, select columns must be " + "specified explicitly.");
       } else {
         return function (doc) {
@@ -516,7 +520,7 @@ function viewQuery(db, query, options) {
           var v = values.reduce(function (tracker, a) {
             if (a[label]) {
               if (typeof a[label] !== "number") {
-                throw GQL.Errors.SELECT_ERROR("All values being averaged must be numbers, but " +
+                throw SELECT_ERROR("All values being averaged must be numbers, but " +
                   a[label] + " is not.");
               }
               return {
@@ -543,7 +547,7 @@ function viewQuery(db, query, options) {
           return values.reduce(function (sum, a) {
             if (a[label]) {
               if (typeof a[label] !== "number") {
-                throw GQL.Errors.SELECT_ERROR("All values being summed must be numbers, but " +
+                throw SELECT_ERROR("All values being summed must be numbers, but " +
                      a[label] + " is not.");
               }
               return sum + a[label];
@@ -657,7 +661,7 @@ function viewQuery(db, query, options) {
               }
               return functions[node.name].apply(null, tempArgs);
             }
-            throw GQL.Errors.PARSING_ERROR("Unrecognized function: " + node.name);
+            throw PARSING_ERROR("Unrecognized function: " + node.name);
 
           case "identifier":
             //handle the case where a column in the group-by is present in the
@@ -681,7 +685,7 @@ function viewQuery(db, query, options) {
               }
               return operators[node.type](parseNode(node.right, doc));
             }
-            throw GQL.Errors.PARSING_ERROR("Unknown token type: " + node.type);
+            throw PARSING_ERROR("Unknown token type: " + node.type);
         }
       }
 
@@ -710,7 +714,7 @@ function viewQuery(db, query, options) {
         } else {
           //select in the presence of aggregators and/or pivot
           if (containsIdentifierWithoutAggregator()) {
-            throw GQL.Errors.SELECT_ERROR(
+            throw SELECT_ERROR(
               "If an aggregation function is used in the select clause, all identifiers " +
               "in the select clause must be wrapped by an aggregation function or appear in" +
               " the group-by clause.");
@@ -719,7 +723,7 @@ function viewQuery(db, query, options) {
             //if there are pivoting columns
             var pivotingColumns = getIdentifierList(query.pivot);
             if (pivotOverlap(pivotingColumns)) {
-              throw GQL.Errors.PIVOT_ERROR(
+              throw PIVOT_ERROR(
                 "Columns that appear in the pivot clause may not appear in the group by or " +
                 "select clauses.");
             }
@@ -845,7 +849,7 @@ function viewQuery(db, query, options) {
             if (node.value === "null") {
               return null;
             }
-            throw GQL.Errors.PARSING_ERROR("Unknown constant: " + node.value);
+            throw PARSING_ERROR("Unknown constant: " + node.value);
 
           case "string":
             return node.value;
@@ -865,7 +869,7 @@ function viewQuery(db, query, options) {
               }
               return operators[node.type](parseNode(node.right));
             }
-            throw GQL.Errors.PARSING_ERROR("Unknown token type " + node.type);
+            throw PARSING_ERROR("Unknown token type " + node.type);
         }
       }
 
