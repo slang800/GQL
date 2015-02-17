@@ -8,6 +8,57 @@ var PARSING_ERROR = errors.PARSING_ERROR;
 var SELECT_ERROR = errors.SELECT_ERROR;
 var PIVOT_ERROR = errors.PIVOT_ERROR;
 
+var operators = {
+  "+": function (a, b) {
+    return a + b;
+  },
+  "-": function (a, b) {
+    if (typeof b === "undefined") {
+      return -a;
+    }
+    return a - b;
+  },
+  "*": function (a, b) {
+    return a * b;
+  },
+  "/": function (a, b) {
+    return a / b;
+  },
+  "=": function (a, b) {
+    return a === b;
+  },
+  "is": function (a, b) {
+    return a === b;
+  },
+  "<": function (a, b) {
+    return a < b;
+  },
+  "<=": function (a, b) {
+    return a <= b;
+  },
+  ">": function (a, b) {
+    return a > b;
+  },
+  ">=": function (a, b) {
+    return a >= b;
+  },
+  "!=": function (a, b) {
+    return a !== b;
+  },
+  "<>": function (a, b) {
+    return a !== b;
+  },
+  "and": function (a, b) {
+    return a && b;
+  },
+  "or": function (a, b) {
+    return a || b;
+  },
+  "not": function (a) {
+    return !a;
+  }
+};
+
 exports.gql = function (fun, opts, callback) {
   if (typeof opts === 'function') {
     callback = opts;
@@ -444,55 +495,6 @@ function viewQuery(db, query, options) {
     }());
 
     return (function () {
-
-      var operators = {
-        "+": function (a, b) {
-          return a + b;
-        },
-        "-": function (a, b) {
-          if (typeof b === "undefined") {
-            return -a;
-          }
-          return a - b;
-        },
-        "*": function (a, b) {
-          return a * b;
-        },
-        "/": function (a, b) {
-          return a / b;
-        },
-        "=": function (a, b) {
-          return a === b;
-        },
-        "<": function (a, b) {
-          return a < b;
-        },
-        "<=": function (a, b) {
-          return a <= b;
-        },
-        ">": function (a, b) {
-          return a > b;
-        },
-        ">=": function (a, b) {
-          return a >= b;
-        },
-        "!=": function (a, b) {
-          return a !== b;
-        },
-        "<>": function (a, b) {
-          return a !== b;
-        },
-        "and": function (a, b) {
-          return a && b;
-        },
-        "or": function (a, b) {
-          return a || b;
-        },
-        "not": function (a) {
-          return !a;
-        }
-      };
-
       var functions = {
         upper: function (str) {
           return str.toUpperCase();
@@ -785,58 +787,6 @@ function viewQuery(db, query, options) {
     var parsedTokens = parse(query.where);
 
     function interpreter(doc) {
-
-      var operators = {
-        "+": function (a, b) {
-          return a + b;
-        },
-        "-": function (a, b) {
-          if (typeof b === "undefined") {
-            return -a;
-          }
-          return a - b;
-        },
-        "*": function (a, b) {
-          return a * b;
-        },
-        "/": function (a, b) {
-          return a / b;
-        },
-        "=": function (a, b) {
-          return a === b;
-        },
-        "is": function (a, b) {
-          return a === b;
-        },
-        "<": function (a, b) {
-          return a < b;
-        },
-        "<=": function (a, b) {
-          return a <= b;
-        },
-        ">": function (a, b) {
-          return a > b;
-        },
-        ">=": function (a, b) {
-          return a >= b;
-        },
-        "!=": function (a, b) {
-          return a !== b;
-        },
-        "<>": function (a, b) {
-          return a !== b;
-        },
-        "and": function (a, b) {
-          return a && b;
-        },
-        "or": function (a, b) {
-          return a || b;
-        },
-        "not": function (a) {
-          return !a;
-        }
-      };
-
       function parseNode(node) {
         switch (node.type) {
           case "boolean":
