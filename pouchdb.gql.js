@@ -673,7 +673,7 @@ function viewQuery(db, query, options) {
           default:
             if (operators[node.type]) {
               if (node.left) {
-                return operators[node.type](parseNode(node.left, doc), 
+                return operators[node.type](parseNode(node.left, doc),
                                             parseNode(node.right, doc));
               }
               return operators[node.type](parseNode(node.right, doc));
