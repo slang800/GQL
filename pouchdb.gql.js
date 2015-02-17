@@ -27,9 +27,6 @@ var operators = {
   "=": function (a, b) {
     return a === b;
   },
-  "is": function (a, b) {
-    return a === b;
-  },
   "<": function (a, b) {
     return a < b;
   },
@@ -45,9 +42,6 @@ var operators = {
   "!=": function (a, b) {
     return a !== b;
   },
-  "<>": function (a, b) {
-    return a !== b;
-  },
   "and": function (a, b) {
     return a && b;
   },
@@ -58,6 +52,10 @@ var operators = {
     return !a;
   }
 };
+
+// aliases
+operators['is'] = operators['='];
+operators['<>'] = operators['!='];
 
 exports.gql = function (fun, opts, callback) {
   if (typeof opts === 'function') {
